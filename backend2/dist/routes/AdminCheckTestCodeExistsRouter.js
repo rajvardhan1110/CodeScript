@@ -12,14 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CheckTestCodeExistsHandler = void 0;
+exports.AdminCheckTestCodeExistsHandler = void 0;
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const TestCodeModel_1 = require("../models/TestCodeModel");
 const ProblemModel_1 = require("../models/ProblemModel");
-const UserAuthMiddleware_1 = require("../Middleware/UserAuthMiddleware");
-const CheckTestCodeExistsRouter = express_1.default.Router();
-const CheckTestCodeExistsHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const AdminAuthMiddleware_1 = require("../Middleware/AdminAuthMiddleware");
+const AdminCheckTestCodeExistsRouter = express_1.default.Router();
+const AdminCheckTestCodeExistsHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { testId } = req.body;
         // Validate testId as ObjectId
@@ -55,6 +55,6 @@ const CheckTestCodeExistsHandler = (req, res) => __awaiter(void 0, void 0, void 
         return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
-exports.CheckTestCodeExistsHandler = CheckTestCodeExistsHandler;
-CheckTestCodeExistsRouter.post("/", UserAuthMiddleware_1.UserAuthMiddleware, exports.CheckTestCodeExistsHandler);
-exports.default = CheckTestCodeExistsRouter;
+exports.AdminCheckTestCodeExistsHandler = AdminCheckTestCodeExistsHandler;
+AdminCheckTestCodeExistsRouter.post("/", AdminAuthMiddleware_1.AdminAuthMiddleware, exports.AdminCheckTestCodeExistsHandler);
+exports.default = AdminCheckTestCodeExistsRouter;

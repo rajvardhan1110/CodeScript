@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubmissionHistoryModel = void 0;
-// models/SubmissionHistoryModel.ts
 const mongoose_1 = __importDefault(require("mongoose"));
 const submissionSchema = new mongoose_1.default.Schema({
     testId: {
@@ -24,6 +23,14 @@ const submissionSchema = new mongoose_1.default.Schema({
     submittedAt: {
         type: Date,
         default: Date.now,
+    },
+    verdict: {
+        type: String,
+        required: true,
+    },
+    marks: {
+        type: Number,
+        required: false,
     },
 });
 const SubmissionHistorySchema = new mongoose_1.default.Schema({

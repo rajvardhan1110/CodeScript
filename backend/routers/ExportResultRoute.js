@@ -43,13 +43,16 @@ async function ExportResultHandler(req, res) {
             };
         });
 
+        // Modify the csvData as required:
         const csvData = testResult.response.map(resp => ({
             Name: userMap[resp.userId.toString()]?.name || "Unknown",
             Email: userMap[resp.userId.toString()]?.email || "Unknown",
-            Marks: resp.marks ?? 0
+            'MCQ Marks': resp.marks ?? 0,
+            'Coding Marks': resp.codingmarks ?? 0,
+            'Total Marks': (resp.marks ?? 0) + (resp.codingmarks ?? 0)
         }));
 
-        const fields = ["Name", "Email", "Marks"];
+        const fields = ["Name", "Email", "MCQ Marks", "Coding Marks", "Total Marks"];
         const json2csv = new Parser({ fields });
         const csvBody = json2csv.parse(csvData);
 

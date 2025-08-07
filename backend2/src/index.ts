@@ -26,6 +26,9 @@ import DeleteProblemRouter from "./routes/DeleteProblemRouter";
 import CheckTestCodeExistsRouter from "./routes/CheckTestCodeRouter";
 import UploadUserCodeRouter from "./routes/UploadUserCodeRouter";
 import GetUserCodeRouter from "./routes/GetUserCodeRouter";
+import ProblemLimitsRouter from "./routes/ProblemLimitsRouter";
+import GetProblemLimitsRouter from "./routes/GetProblemLimitsRouter";
+import AdminCheckTestCodeExistsRouter from "./routes/AdminCheckTestCodeExistsRouter";
 // import CreateDefaultMarkdownRouter from "./routes/CreateDefaultMarkdownRouter";
 
 
@@ -58,7 +61,8 @@ async function start(): Promise<void> {
 start();
 
 
-app.use("/checkTestCode",CheckTestCodeExistsRouter)
+app.use("/checkTestCode",CheckTestCodeExistsRouter);
+app.use("/admin-checkTestCode",AdminCheckTestCodeExistsRouter)
 app.use("/createTestCode", CreateTestCodeRouter);
 app.use("/uploadAdminCode",UploadAdminCodeRouter);
 app.use("/uploadSampleTest",UploadSampleTestCodeRouter);
@@ -83,3 +87,5 @@ app.use("/history",GetSubmissionHistoryRouter);
 app.use("/admin/delete-problem",DeleteProblemRouter);
 app.use("/uploadUserCode",UploadUserCodeRouter);
 app.use("/getUserCode",GetUserCodeRouter);
+app.use("/upload-limits",ProblemLimitsRouter);
+app.use("/get-limits",GetProblemLimitsRouter);

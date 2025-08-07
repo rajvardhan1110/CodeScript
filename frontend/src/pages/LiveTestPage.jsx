@@ -5,6 +5,7 @@ import axios from "axios";
 import Question from "../components/Question";
 import QuestionNavigator from "../components/QuestionNavigator";
 import Timer from "../components/Timer";
+import UserCodingQuestions from "../components/UserCodingQuestions"; // Adjust import if needed
 
 import config from "../../apiconfig";
 const API = config.BASE_URL;
@@ -20,6 +21,10 @@ export default function LiveTestPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // New: Toggle between MCQ/Coding and detect coding section
+    const [activeTab, setActiveTab] = useState("mcq");
+    const [hasCoding, setHasCoding] = useState(false);
+
     useEffect(() => {
         async function fetchTestAndAttempts() {
             try {
@@ -28,7 +33,6 @@ export default function LiveTestPage() {
 
                 // Fetch test data
                 const testRes = await axios.get(`${API}/testLive?testId=${testId}`, headers);
-
                 setQuestions(testRes.data.test.questions);
                 setTestData(testRes.data.test);
 
@@ -56,10 +60,26 @@ export default function LiveTestPage() {
         }
 
         fetchTestAndAttempts();
+    }, [testId, navigate]);
+
+    // Detect presence of coding section
+    useEffect(() => {
+        async function fetchCodingExist() {
+            if (!testId) return;
+            const token = localStorage.getItem("usertoken");
+            try {
+                const res = await axios.post(
+                    "http://localhost:5050/checkTestCode",
+                    { testId },
+                    { headers: { token } }
+                );
+                setHasCoding(!!res.data.exists);
+            } catch (e) {
+                setHasCoding(false);
+            }
+        }
+        fetchCodingExist();
     }, [testId]);
-
-
-
 
     function handleChangeQuestion(index) {
         setCurrentQIndex(index);
@@ -112,42 +132,81 @@ export default function LiveTestPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
-            <div className="max-w-7xl mx-auto p-4">
+            <div className="max-w-8xl mx-auto p-4">
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                    {/* Header with timer */}
-                    <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-gray-800">{testData?.title || "Test"}</h2>
-                        <Timer
-                            testTime={testData?.testTime}
-                            totalTime={testData?.totalTime}
-                            onTimeUp={submitTest}
-                        />
-                    </div>
+                    {/* Header with timer and tab buttons */}
+                    <div className="p-4 bg-white shadow-sm border border-gray-100 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <h2 className="text-2xl font-bold text-gray-800">
+                                {testData?.title || "Test"}
+                                <span className="ml-2 text-indigo-600 text-lg font-medium">
+                                    {testData?.subtitle || ""}
+                                </span>
+                            </h2>
+                            <div className="flex gap-2">
+                                <button
+                                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${activeTab === "mcq"
+                                            ? "bg-indigo-600 text-white shadow-md"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                        }`}
+                                    onClick={() => setActiveTab("mcq")}
+                                >
+                                    MCQ Questions
+                                </button>
+                                {hasCoding && (
+                                    <button
+                                        className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${activeTab === "coding"
+                                                ? "bg-indigo-600 text-white shadow-md"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                            }`}
+                                        onClick={() => setActiveTab("coding")}
+                                    >
+                                        Coding Problems
+                                    </button>
+                                )}
+                            </div>
+                        </div>
 
-                    {/* Main content */}
-                    <div className="flex flex-col md:flex-row">
-                        {/* Left panel - Question navigator */}
-                        <div className="w-full md:w-1/4 p-4 border-r border-gray-200 bg-gray-50">
-                            <QuestionNavigator
-                                questions={questions}
-                                current={currentQIndex}
-                                onJump={handleChangeQuestion}
-                                attemptedQIDs={attemptedQIDs}
-                                onSubmit={submitTest}
+                        <div className="flex-shrink-0">
+                            <Timer
+                                testTime={testData?.testTime}
+                                totalTime={testData?.totalTime}
+                                onTimeUp={submitTest}
+                                className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-medium border border-indigo-100"
                             />
                         </div>
-
-                        {/* Right panel - Question */}
-                        <div className="w-full md:w-3/4 p-6">
-                            {questions.length > 0 && currentQIndex >= 0 && currentQIndex < questions.length && (
-                                <Question
-                                    questionId={questions[currentQIndex]}
-                                    testId={testId}
-                                    markAttempted={markAttempted}
-                                />
-                            )}
-                        </div>
                     </div>
+
+                    {/* Main content: MCQ (split), Coding (full width) */}
+                    {activeTab === "mcq" ? (
+                        <div className="flex flex-col md:flex-row">
+                            {/* MCQ left: navigator */}
+                            <div className="w-full md:w-1/4 p-4 border-r border-gray-200 bg-gray-50">
+                                <QuestionNavigator
+                                    questions={questions}
+                                    current={currentQIndex}
+                                    onJump={handleChangeQuestion}
+                                    attemptedQIDs={attemptedQIDs}
+                                    onSubmit={submitTest}
+                                />
+                            </div>
+                            {/* MCQ right: current question */}
+                            <div className="w-full md:w-3/4 p-6">
+                                {questions.length > 0 && currentQIndex >= 0 && currentQIndex < questions.length && (
+                                    <Question
+                                        questionId={questions[currentQIndex]}
+                                        testId={testId}
+                                        markAttempted={markAttempted}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        // Coding: full width, no left panel!
+                        <div className="w-full p-6">
+                            <UserCodingQuestions />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

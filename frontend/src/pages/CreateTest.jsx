@@ -39,7 +39,7 @@ export default function CreateTest() {
             );
 
             alert(res.data.msg);
-            console.log("Test ID:", res.data.testid);
+            // console.log("Test ID:", res.data.testid);
             navigate("/admin/home");
 
         } catch (err) {
@@ -67,7 +67,7 @@ export default function CreateTest() {
                 alert("⚠️ Error: " + err.message);
             }
 
-            console.error("Error in create test frontend:", err);
+            // console.error("Error in create test frontend:", err);
         }
     }
 

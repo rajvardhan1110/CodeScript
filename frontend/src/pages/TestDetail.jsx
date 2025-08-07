@@ -19,7 +19,7 @@ export default function TestDetails() {
     const [testInfoVisible, setTestInfoVisible] = useState(true);
     const [questionsVisible, setQuestionsVisible] = useState(false);
     const [updateVisible, setUpdateVisible] = useState(false);
-    const [codingVisible, setCodingVisible] = useState(false); // ✅ NEW STATE
+    const [codingVisible, setCodingVisible] = useState(false);
 
     const [selectedQuestionId, setSelectedQuestionId] = useState(null);
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -36,30 +36,59 @@ export default function TestDetails() {
     const [error, setError] = useState("");
     const [copied, setCopied] = useState("");
 
+    // === Coding section presence logic (NEW) ===
+    const [codingSectionInfo, setCodingSectionInfo] = useState(null);
+    const [codingSectionLoading, setCodingSectionLoading] = useState(true);
+
+    useEffect(() => {
+        if (!id) return;
+        const fetchCodingSection = async () => {
+            setCodingSectionLoading(true);
+            setCodingSectionInfo(null);
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.post(
+                    "http://localhost:5050/admin-checkTestCode",
+                    { testId: id },
+                    { headers: { token } }
+                );
+                if (res.data.exists) {
+                    setCodingSectionInfo({
+                        totalQuestions: res.data.totalQuestions,
+                        totalMarks: res.data.totalMarks
+                    });
+                } else {
+                    setCodingSectionInfo(null);
+                }
+            } catch (e) {
+                setCodingSectionInfo(null); // silent fail
+            }
+            setCodingSectionLoading(false);
+        };
+        fetchCodingSection();
+    }, [id]);
+    // === END Coding section presence logic (NEW) ===
+
     useEffect(() => {
         const fetchTestData = async () => {
             try {
                 const token = localStorage.getItem("token");
-
                 if (!token) {
                     setError("Authentication token missing. Please log in.");
                     navigate("/");
                     return;
                 }
-
                 const questionsRes = await axios.post(`${API}/allquestions`, {
                     testId: id
                 }, {
                     headers: { token }
                 });
                 setAllQuestions(questionsRes.data.questions || []);
-
                 const infoRes = await axios.post(`${API}/adminTestInfo`, {
                     testId: id
                 }, {
                     headers: { token }
                 });
-
                 const test = infoRes.data.test;
                 setTitle(test.title || "");
                 setDescription(test.description || "");
@@ -70,10 +99,8 @@ export default function TestDetails() {
                 setPhase(test.examTakerPhase);
                 setPublishResult(test.publishResult);
                 setError("");
-
             } catch (err) {
                 console.error("Error fetching test data:", err);
-
                 if (err.response?.status === 401 || err.response?.status === 403) {
                     localStorage.removeItem("token");
                     setError("Session expired. Please log in again.");
@@ -83,7 +110,6 @@ export default function TestDetails() {
                 }
             }
         };
-
         fetchTestData();
     }, [id, navigate]);
 
@@ -95,21 +121,21 @@ export default function TestDetails() {
         setTestInfoVisible(true);
         setQuestionsVisible(false);
         setUpdateVisible(false);
-        setCodingVisible(false); // ✅ reset coding view
+        setCodingVisible(false);
     }
 
     function showQuestions() {
         setTestInfoVisible(false);
         setQuestionsVisible(true);
         setUpdateVisible(false);
-        setCodingVisible(false); // ✅ reset coding view
+        setCodingVisible(false);
     }
 
     function showUpdate() {
         setUpdateVisible(true);
         setTestInfoVisible(false);
         setQuestionsVisible(false);
-        setCodingVisible(false); // ✅ reset coding view
+        setCodingVisible(false);
     }
 
     function showCodingQuestions() {
@@ -144,13 +170,11 @@ export default function TestDetails() {
         try {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("Authentication token missing. Please log in.");
-
             const res = await axios.post(
                 `${API}/togglePublishResult`,
                 { testId: id },
                 { headers: { token } }
             );
-
             alert(res.data.msg);
             setPublishResult(res.data.test.publishResult);
         } catch (err) {
@@ -165,13 +189,11 @@ export default function TestDetails() {
                 alert("Test ID is missing.");
                 return;
             }
-
             const token = localStorage.getItem("token");
             const response = await axios.get(`${API}/export-result?testId=${id}`, {
                 responseType: "blob",
                 headers: { token }
             });
-
             const blob = new Blob([response.data], { type: "text/csv" });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -180,7 +202,6 @@ export default function TestDetails() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
         } catch (error) {
             console.error("Download error:", error);
             alert(
@@ -224,7 +245,10 @@ export default function TestDetails() {
                     >
                         ← Back to Dashboard
                     </button>
-                </div>
+                </div> 
+
+
+                
 
                 {/* Navigation Tabs */}
                 <div className="flex border-b border-gray-200 mb-6">
@@ -249,6 +273,22 @@ export default function TestDetails() {
                     </div>
                 )}
 
+                {codingSectionLoading ? null : codingSectionInfo && testInfoVisible && (
+                    <div className="my-6 p-4 rounded-xl bg-indigo-50 border border-indigo-100 shadow-sm">
+                        <h3 className="text-lg font-semibold text-indigo-800 mb-2">Coding Section Details</h3>
+                        <div className="flex flex-wrap gap-6">
+                            <div className="text-indigo-700">
+                                <span className="font-medium">Questions:</span>{" "}
+                                <span className="font-bold">{codingSectionInfo.totalQuestions}</span>
+                            </div>
+                            <div className="text-indigo-700">
+                                <span className="font-medium">Total Marks:</span>{" "}
+                                <span className="font-bold">{codingSectionInfo.totalMarks}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Test Info Section */}
                 {testInfoVisible && (
                     <div className="space-y-6">
@@ -259,7 +299,7 @@ export default function TestDetails() {
                                 <div><p className="text-sm text-gray-500">Description</p><p className="font-medium">{description || "No description"}</p></div>
                                 <div><p className="text-sm text-gray-500">Scheduled Time</p><p className="font-medium">{testTime}</p></div>
                                 <div><p className="text-sm text-gray-500">Duration</p><p className="font-medium">{totalTime} minutes</p></div>
-                                <div><p className="text-sm text-gray-500">Total Marks</p><p className="font-medium">{totalMark}</p></div>
+                                <div><p className="text-sm text-gray-500">Total MCQ Marks</p><p className="font-medium">{totalMark}</p></div>
                                 <div><p className="text-sm text-gray-500">Status</p><p className={`font-medium capitalize ${phase === 'draft' ? 'text-yellow-600' : 'text-green-600'}`}>{phase}</p></div>
                                 <div><p className="text-sm text-gray-500">Results Published</p><p className="font-medium">{publishResult ? (<span className="text-green-600">✅ Published</span>) : (<span className="text-red-600">❌ Not Published</span>)}</p></div>
                             </div>
@@ -275,7 +315,6 @@ export default function TestDetails() {
                             >
                                 {phase === "draft" ? "Finalize Test" : "Convert to Draft"}
                             </button>
-
                             {testTimeRaw && new Date(testTimeRaw.getTime() + totalTime * 60000) <= new Date() && (
                                 <button
                                     onClick={handleTogglePublishResult}
@@ -284,14 +323,12 @@ export default function TestDetails() {
                                     {publishResult ? "Unpublish Results" : "Publish Results"}
                                 </button>
                             )}
-
                             <button
                                 onClick={handleDownload}
                                 className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors flex items-center gap-2 shadow-sm"
                             >
                                 <span>📥</span> Download Results (CSV)
                             </button>
-
                             <button
                                 onClick={copyTestId}
                                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg"

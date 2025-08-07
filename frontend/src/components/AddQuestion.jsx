@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import config from "../../apiconfig";
 const API = config.BASE_URL;
-export default function AddQuestion({ testId, onCancel, setQuestionsVisible,setAllQuestions,setSelectedQuestionId }) {
 
+export default function AddQuestion({ testId, onCancel, setQuestionsVisible, setAllQuestions, setSelectedQuestionId }) {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [questionText, setQuestionText] = useState("");
     const [options, setOptions] = useState(["", ""]);
     const [correctAnswerText, setCorrectAnswerText] = useState("");
@@ -36,6 +37,32 @@ export default function AddQuestion({ testId, onCancel, setQuestionsVisible,setA
         const updatedOptions = options.filter((_, i) => i !== index);
         setOptions(updatedOptions);
     };
+
+    const fetchQuestions = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setError("Authentication token missing. Please log in.");
+                navigate("/");
+                return;
+            }
+
+            const questionsRes = await axios.post(`${API}/allquestions`, {
+                testId: id
+            }, {
+                headers: { token }
+            });
+
+            setAllQuestions(questionsRes.data.questions || []);
+        } catch (e) {
+            setError("Error in fetching questions.");
+            console.error(e);
+        }
+    };
+
+    useEffect(() => {
+        fetchQuestions();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -77,45 +104,22 @@ export default function AddQuestion({ testId, onCancel, setQuestionsVisible,setA
             });
 
             setSuccessMessage(response.data.msg || "Question added successfully!");
-            // setTimeout(() => {
-            //     onCancel();
-            //     // setQuestionsVisible(true);
-            //     // window.location.reload();
-            // }, 1500);
+            await fetchQuestions(); // ✅ update list
+            setQuestionText("");
+            setCorrectAnswerText("");
+            setOptions(["", ""]);
+            setMarks(1);
+
+            // Optional: auto-close form
+            // setTimeout(() => onCancel(), 1500);
         } catch (err) {
             console.error("Error in submission:", err);
             setError(err.response?.data?.error || "Failed to add question");
         }
     };
 
-    useEffect(()=>{
-        // setQuestionsVisible(true);
-        const fetchque = async () => {
-            try {
-                const token = localStorage.getItem("token");
-
-                if (!token) {
-                    setError("Authentication token missing. Please log in.");
-                    navigate("/");
-                    return;
-                }
-
-                const questionsRes = await axios.post(`${API}/allquestions`, {
-                    testId: id
-                }, {
-                    headers: { token }
-                });
-                setAllQuestions(questionsRes.data.questions || []);
-            } catch(e) {
-                setError("error in question fetching");
-                console.log(e);
-            }
-        }
-
-        fetchque();
-    },[handleSubmit])
     return (
-       <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto -ml-4">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto -ml-4">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Question</h2>
 
             {/* Status Messages */}

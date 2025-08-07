@@ -69,5 +69,6 @@ const ProblemSchema = new mongoose_1.Schema({
     },
     cpu_time_limit: { type: Number, default: 2 },
     memory_limit: { type: Number, default: 128000 },
+    mark: { type: Number, default: 5 }
 });
 exports.ProblemModel = mongoose_1.default.model("Problem", ProblemSchema);

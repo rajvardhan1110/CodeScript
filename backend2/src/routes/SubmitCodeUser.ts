@@ -8,6 +8,7 @@ import { uploadSubmissionToS3 } from "../utils/uploadSubmissionToS3";
 import axios from "axios";
 import { Buffer } from "buffer";
 
+
 const SubmitCodeUserRouter = express.Router();
 
 interface CustomRequest extends Request {
@@ -36,18 +37,10 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
   try {
     const { code, language_id, problemId, testId } = req.body;
 
-    console.log("📥 Incoming submission:", {
-      codeSnippet: code?.slice(0, 50),
-      language_id,
-      problemId,
-      testId,
-    });
-
     if (!code || !language_id || !problemId || !testId) {
       return res.status(400).json({ msg: "code, language_id, problemId, and testId are required" });
     }
 
-    // ✅ Validate ObjectId types
     if (!mongoose.Types.ObjectId.isValid(problemId)) {
       return res.status(400).json({ msg: "Invalid problemId" });
     }
@@ -61,9 +54,7 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       return res.status(404).json({ msg: "Problem not found" });
     }
 
-    // ✅ Convert testId to ObjectId for DB use only
     const testIdObjectId = new mongoose.Types.ObjectId(testId);
-
     const { sampleTestCases, hiddenTestCases, cpu_time_limit, memory_limit } = problem;
 
     const runTestCase = async (input: string, expectedOutput: string) => {
@@ -83,7 +74,6 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       );
 
       const result = response.data;
-
       const runtimeErrorIds = [7, 8, 9, 10, 11, 12];
       const timeLimitErrorId = 5;
       const compilationErrorId = 6;
@@ -123,6 +113,7 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
     const sampleResults = [];
     let allSamplesPassed = true;
 
+    //  Sample Test Cases 
     for (let i = 0; i < sampleTestCases.length; i++) {
       const testCase = sampleTestCases[i];
       const input = await getS3DataFromUrl(testCase.input);
@@ -132,8 +123,8 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       const verdict = result.error
         ? result.type
         : result.passed
-        ? "Accepted"
-        : "Wrong Answer";
+          ? "Accepted"
+          : "Wrong Answer";
 
       sampleResults.push({
         testCaseId: testCase._id,
@@ -145,9 +136,11 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       });
 
       if (result.error) {
+        // Save verdict same as in S3!
+        const s3Verdict = verdict; // result.type;
         const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, {
           sampleResults,
-          verdict: result.type,
+          verdict: s3Verdict,
         });
 
         await SubmissionHistoryModel.findOneAndUpdate(
@@ -159,6 +152,7 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
                 problemId: new mongoose.Types.ObjectId(problemId),
                 s3Url,
                 submittedAt,
+                verdict: s3Verdict,
               },
             },
           },
@@ -166,7 +160,7 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
         );
 
         return res.status(200).json({
-          msg: result.type,
+          msg: s3Verdict,
           verdicts: sampleResults,
           allPassed: false,
         });
@@ -177,10 +171,12 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       }
     }
 
+    //  Samples failed 
     if (!allSamplesPassed) {
+      const s3Verdict = "Sample test case(s) failed";
       const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, {
         sampleResults,
-        verdict: "Sample test case(s) failed",
+        verdict: s3Verdict,
       });
 
       await SubmissionHistoryModel.findOneAndUpdate(
@@ -192,6 +188,7 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
               problemId: new mongoose.Types.ObjectId(problemId),
               s3Url,
               submittedAt,
+              verdict: s3Verdict,
             },
           },
         },
@@ -199,12 +196,13 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       );
 
       return res.status(200).json({
-        msg: "Sample test case(s) failed",
+        msg: s3Verdict,
         verdicts: sampleResults,
         allPassed: false,
       });
     }
 
+    //  Hidden Test Cases 
     for (let i = 0; i < hiddenTestCases.length; i++) {
       const testCase = hiddenTestCases[i];
       const input = await getS3DataFromUrl(testCase.input);
@@ -212,30 +210,9 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
       const result = await runTestCase(input, output);
 
       if (result.error) {
-        const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, result);
-
-        await SubmissionHistoryModel.findOneAndUpdate(
-          { userId: req.userId },
-          {
-            $push: {
-              submissions: {
-                testId: testIdObjectId,
-                problemId: new mongoose.Types.ObjectId(problemId),
-                s3Url,
-                submittedAt,
-              },
-            },
-          },
-          { upsert: true, new: true }
-        );
-
-        return res.status(400).json({ msg: result.type, ...result });
-      }
-
-      if (!result.passed) {
+        const s3Verdict = result.type;
         const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, {
-          hiddenFailedCase: i + 1,
-          verdict: "Wrong answer on hidden test case",
+          verdict: s3Verdict,
         });
 
         await SubmissionHistoryModel.findOneAndUpdate(
@@ -247,6 +224,33 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
                 problemId: new mongoose.Types.ObjectId(problemId),
                 s3Url,
                 submittedAt,
+                verdict: s3Verdict,
+              },
+            },
+          },
+          { upsert: true, new: true }
+        );
+
+        return res.status(400).json({ msg: s3Verdict, ...result });
+      }
+
+      if (!result.passed) {
+        const s3Verdict = `Wrong answer on hidden test case ${i + 1}`;
+        const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, {
+          hiddenFailedCase: i + 1,
+          verdict: s3Verdict,
+        });
+
+        await SubmissionHistoryModel.findOneAndUpdate(
+          { userId: req.userId },
+          {
+            $push: {
+              submissions: {
+                testId: testIdObjectId,
+                problemId: new mongoose.Types.ObjectId(problemId),
+                s3Url,
+                submittedAt,
+                verdict: s3Verdict,
               },
             },
           },
@@ -254,33 +258,44 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
         );
 
         return res.status(200).json({
-          msg: `Wrong answer on hidden test case ${i + 1}`,
+          msg: s3Verdict,
         });
       }
     }
 
+    //  All Test Cases Passed 
+    const s3Verdict = "All test cases passed";
     const s3Url = await uploadSubmissionToS3(req.userId!, testId, problemId, code, {
-      verdict: "All test cases passed",
+      verdict: s3Verdict,
     });
+
+    //  Add the mark from the problem 
+    const submissionObj: any = {
+      testId: testIdObjectId,
+      problemId: new mongoose.Types.ObjectId(problemId),
+      s3Url,
+      submittedAt,
+      verdict: s3Verdict,
+    };
+
+    if (problem.mark !== undefined) {
+      submissionObj.marks = problem.mark;
+    }
 
     await SubmissionHistoryModel.findOneAndUpdate(
       { userId: req.userId },
       {
         $push: {
-          submissions: {
-            testId: testIdObjectId,
-            problemId: new mongoose.Types.ObjectId(problemId),
-            s3Url,
-            submittedAt,
-          },
+          submissions: submissionObj,
         },
       },
       { upsert: true, new: true }
     );
 
     return res.status(200).json({
-      msg: "All test cases passed",
+      msg: s3Verdict,
     });
+
   } catch (error: any) {
     console.error("❌ Error in SubmitCodeUser:", error.message || error);
     return res.status(500).json({
@@ -291,4 +306,5 @@ export const SubmitCodeUserHandler = async (req: CustomRequest, res: Response) =
 };
 
 SubmitCodeUserRouter.post("/", UserAuthMiddleware, SubmitCodeUserHandler);
+
 export default SubmitCodeUserRouter;

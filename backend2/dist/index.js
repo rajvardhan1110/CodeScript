@@ -40,6 +40,9 @@ const DeleteProblemRouter_1 = __importDefault(require("./routes/DeleteProblemRou
 const CheckTestCodeRouter_1 = __importDefault(require("./routes/CheckTestCodeRouter"));
 const UploadUserCodeRouter_1 = __importDefault(require("./routes/UploadUserCodeRouter"));
 const GetUserCodeRouter_1 = __importDefault(require("./routes/GetUserCodeRouter"));
+const ProblemLimitsRouter_1 = __importDefault(require("./routes/ProblemLimitsRouter"));
+const GetProblemLimitsRouter_1 = __importDefault(require("./routes/GetProblemLimitsRouter"));
+const AdminCheckTestCodeExistsRouter_1 = __importDefault(require("./routes/AdminCheckTestCodeExistsRouter"));
 // import CreateDefaultMarkdownRouter from "./routes/CreateDefaultMarkdownRouter";
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -66,6 +69,7 @@ function start() {
 }
 start();
 app.use("/checkTestCode", CheckTestCodeRouter_1.default);
+app.use("/admin-checkTestCode", AdminCheckTestCodeExistsRouter_1.default);
 app.use("/createTestCode", CreateTestCodeRouter_1.default);
 app.use("/uploadAdminCode", UploadAdminCodeRouter_1.default);
 app.use("/uploadSampleTest", UploadSampleTestCasesRouter_1.default);
@@ -90,3 +94,5 @@ app.use("/history", GetSubmissionHistoryRouter_1.default);
 app.use("/admin/delete-problem", DeleteProblemRouter_1.default);
 app.use("/uploadUserCode", UploadUserCodeRouter_1.default);
 app.use("/getUserCode", GetUserCodeRouter_1.default);
+app.use("/upload-limits", ProblemLimitsRouter_1.default);
+app.use("/get-limits", GetProblemLimitsRouter_1.default);

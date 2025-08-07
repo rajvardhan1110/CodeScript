@@ -21,6 +21,7 @@ const SetQuestion = () => {
 
   const [languageId, setLanguageId] = useState(54);
   const [adminCodeLanguageId, setAdminCodeLanguageId] = useState(null);
+  const [showLimits, setShowLimits] = useState(false);
   const [code, setCode] = useState("");
   const [sampleTestCaseIds, setSampleTestCaseIds] = useState([]);
   const [hiddenTestCaseIds, setHiddenTestCaseIds] = useState([]);
@@ -32,10 +33,19 @@ const SetQuestion = () => {
     boilerplate: false,
     testCase: false,
     saveCode: false,
-    deleteCase: false
+    deleteCase: false,
   });
   const [notification, setNotification] = useState(null);
   const userChangedLanguage = useRef(false);
+
+  // Problem limits state
+  const [limits, setLimits] = useState({
+    cpu_time_limit: "",
+    memory_limit: "",
+    mark: "",
+  });
+  const [limitsLoading, setLimitsLoading] = useState(false);
+  const [limitsUpdateLoading, setLimitsUpdateLoading] = useState(false);
 
   const token = localStorage.getItem("token");
   if (!token) {
@@ -45,6 +55,8 @@ const SetQuestion = () => {
 
   useEffect(() => {
     fetchAdminCode();
+    fetchProblemLimits();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -54,6 +66,7 @@ const SetQuestion = () => {
     } else {
       fetchBoilerplate(languageId);
     }
+    // eslint-disable-next-line
   }, [languageId]);
 
   const showNotification = (message, type = "info", duration = 3000) => {
@@ -61,8 +74,72 @@ const SetQuestion = () => {
     setTimeout(() => setNotification(null), duration);
   };
 
+  // --- Problem Limits API fetch and update ---
+  const fetchProblemLimits = async () => {
+    setLimitsLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:5050/get-limits",
+        { problemId },
+        { headers: { token } }
+      );
+      if (res.status === 200) {
+        setLimits({
+          cpu_time_limit: res.data.cpu_time_limit?.toString() ?? "",
+          memory_limit: res.data.memory_limit?.toString() ?? "",
+          mark: res.data.mark?.toString() ?? "",
+        });
+      } else {
+        showNotification(res.data.msg || "Failed to load problem limits", "error");
+      }
+    } catch (err) {
+      showNotification("Failed to fetch problem limits", "error");
+    } finally {
+      setLimitsLoading(false);
+    }
+  };
+
+  const handleLimitsUpdate = async (e) => {
+    e.preventDefault();
+    // Validation
+    if (
+      limits.cpu_time_limit === "" ||
+      limits.memory_limit === "" ||
+      limits.mark === ""
+    ) {
+      showNotification("All limit fields are required!", "error");
+      return;
+    }
+    setLimitsUpdateLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:5050/upload-limits",
+        {
+          problemId,
+          cpu_time_limit: Number(limits.cpu_time_limit),
+          memory_limit: Number(limits.memory_limit),
+          mark: Number(limits.mark),
+        },
+        { headers: { token } }
+      );
+      if (res.status === 200) {
+        showNotification("Limits updated successfully", "success");
+      } else {
+        showNotification(res.data.msg || "Failed to update limits", "error");
+      }
+    } catch (error) {
+      showNotification(
+        error.response?.data?.msg || "Error updating limits",
+        "error"
+      );
+    } finally {
+      setLimitsUpdateLoading(false);
+    }
+  };
+  // -- End Problem Limits logic ---
+
   const fetchBoilerplate = async (langId) => {
-    setLoadingStates(prev => ({...prev, boilerplate: true}));
+    setLoadingStates((prev) => ({ ...prev, boilerplate: true }));
     try {
       const res = await axios.post(
         "http://localhost:5050/get-boilerplates",
@@ -74,12 +151,12 @@ const SetQuestion = () => {
       console.error("Failed to fetch boilerplate:", error);
       showNotification("Failed to fetch boilerplate code", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, boilerplate: false}));
+      setLoadingStates((prev) => ({ ...prev, boilerplate: false }));
     }
   };
 
   const fetchAdminCode = async () => {
-    setLoadingStates(prev => ({...prev, adminCode: true}));
+    setLoadingStates((prev) => ({ ...prev, adminCode: true }));
     try {
       const res = await axios.post(
         "http://localhost:5050/getAdminCode",
@@ -122,7 +199,7 @@ const SetQuestion = () => {
       console.error("Exception in fetchAdminCode:", error);
       showNotification("Something went wrong while fetching admin code.", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, adminCode: false}));
+      setLoadingStates((prev) => ({ ...prev, adminCode: false }));
     }
   };
 
@@ -144,7 +221,7 @@ const SetQuestion = () => {
   };
 
   const handleViewTestCase = async (testCaseId, type) => {
-    setLoadingStates(prev => ({...prev, testCase: true}));
+    setLoadingStates((prev) => ({ ...prev, testCase: true }));
     try {
       const res = await axios.post(
         "http://localhost:5050/getAdminTestcase",
@@ -163,7 +240,7 @@ const SetQuestion = () => {
       console.error("Failed to load test case details:", error);
       showNotification("Could not load test case details.", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, testCase: false}));
+      setLoadingStates((prev) => ({ ...prev, testCase: false }));
     }
   };
 
@@ -173,7 +250,7 @@ const SetQuestion = () => {
       return;
     }
 
-    setLoadingStates(prev => ({...prev, testCase: true}));
+    setLoadingStates((prev) => ({ ...prev, testCase: true }));
     try {
       const res = await axios.post(
         `http://localhost:5050/upload${addMode === "sample" ? "Sample" : "Hidden"}Test`,
@@ -199,14 +276,14 @@ const SetQuestion = () => {
       });
       showNotification(data?.msg || "Failed to add test case.", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, testCase: false}));
+      setLoadingStates((prev) => ({ ...prev, testCase: false }));
     }
   };
 
   const handleDeleteTestCase = async () => {
     if (!window.confirm("Are you sure you want to delete this test case?")) return;
 
-    setLoadingStates(prev => ({...prev, deleteCase: true}));
+    setLoadingStates((prev) => ({ ...prev, deleteCase: true }));
     try {
       const res = await axios.delete(
         `http://localhost:5050/delete${addResult.type === "sample" ? "Sample" : "Hidden"}Test`,
@@ -228,12 +305,12 @@ const SetQuestion = () => {
       console.error("Delete failed", err);
       showNotification("Failed to delete test case.", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, deleteCase: false}));
+      setLoadingStates((prev) => ({ ...prev, deleteCase: false }));
     }
   };
 
   const handleSaveCode = async () => {
-    setLoadingStates(prev => ({...prev, saveCode: true}));
+    setLoadingStates((prev) => ({ ...prev, saveCode: true }));
     try {
       const res = await axios.post(
         "http://localhost:5050/uploadAdminCode",
@@ -253,7 +330,7 @@ const SetQuestion = () => {
       console.error("Save failed", err);
       showNotification("Failed to save code", "error");
     } finally {
-      setLoadingStates(prev => ({...prev, saveCode: false}));
+      setLoadingStates((prev) => ({ ...prev, saveCode: false }));
     }
   };
 
@@ -261,47 +338,161 @@ const SetQuestion = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Notification Toast */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg text-white ${
-          notification.type === "error" ? "bg-rose-500" :
-          notification.type === "success" ? "bg-emerald-500" :
-          "bg-sky-500"
-        } transition-all duration-300 animate-fade-in`}>
+        <div
+          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg text-white ${notification.type === "error"
+            ? "bg-rose-500"
+            : notification.type === "success"
+              ? "bg-emerald-500"
+              : "bg-sky-500"
+            } transition-all duration-300 animate-fade-in`}
+        >
           {notification.message}
         </div>
       )}
 
       {/* Mobile Toggle Button */}
-      <button 
+      <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="lg:hidden fixed bottom-4 right-4 z-30 bg-sky-600 text-white p-3 rounded-full shadow-lg"
       >
-        {isCollapsed ? 'Show Tests' : 'Hide Tests'}
+        {isCollapsed ? "Show Tests" : "Hide Tests"}
       </button>
 
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="flex flex-col lg:flex-row">
           {/* Left Panel - Test Cases (Collapsible) */}
-          <div 
+          <div
             ref={panelRef}
-            className={`lg:w-2/5 xl:w-1/3 bg-gray-50 border-r border-gray-200 transition-all duration-300 overflow-y-auto ${
-              isCollapsed ? 'hidden lg:block lg:absolute lg:left-0 lg:z-20 lg:shadow-lg' : 'block'
-            }`}
-            style={{ 
-              maxHeight: 'calc(100vh - 2rem)',
-              transform: isCollapsed ? 'translateX(-100%)' : 'translateX(0)'
+            className={`lg:w-2/5 xl:w-1/3 bg-gray-50 border-r border-gray-200 transition-all duration-300 overflow-y-auto ${isCollapsed ? "hidden lg:block lg:absolute lg:left-0 lg:z-20 lg:shadow-lg" : "block"
+              }`}
+            style={{
+              maxHeight: "calc(100vh - 2rem)",
+              transform: isCollapsed ? "translateX(-100%)" : "translateX(0)",
             }}
           >
             <div className="p-4 sticky top-0 bg-gray-50 z-10 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-800">Test Cases</h2>
-              <button 
+              <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="hidden lg:block text-gray-500 hover:text-gray-700"
               >
-                {isCollapsed ? '→' : '←'}
+                {isCollapsed ? "→" : "←"}
               </button>
             </div>
 
             <div className="p-4">
+              {/* PROBLEM LIMITS SECTION */}
+              <div className="bg-white rounded-lg p-4 shadow-xs border border-gray-200 mb-6">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                  <h3 className="text-lg font-semibold text-gray-800">Problem Constraints</h3>
+                  <button
+                    onClick={() => setShowLimits(!showLimits)}
+                    className="text-sky-600 hover:text-sky-700 font-medium text-sm flex items-center"
+                  >
+                    {showLimits ? (
+                      <>
+                        <span className="mr-1">▲</span> Hide
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-1">▼</span> Show
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {showLimits && (
+                  <form
+                    className="grid grid-cols-1 gap-4"
+                    onSubmit={handleLimitsUpdate}
+                    autoComplete="off"
+                  >
+                    {/* CPU Time Limit */}
+                    <div className="flex flex-col">
+                      <label className="text-xs font-medium text-gray-600 mb-0.5">
+                        CPU Time Limit <span className="text-gray-400 text-[11px]">(sec)</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        className="w-full border border-gray-300 text-sm px-3 py-2 rounded focus:ring-2 focus:ring-sky-300 focus:outline-none bg-gray-50"
+                        value={limits.cpu_time_limit}
+                        onChange={(e) =>
+                          setLimits((prev) => ({
+                            ...prev,
+                            cpu_time_limit: e.target.value,
+                          }))
+                        }
+                        placeholder="ex: 2"
+                        disabled={limitsLoading || limitsUpdateLoading}
+                      />
+                    </div>
+
+                    {/* Memory Limit */}
+                    <div className="flex flex-col">
+                      <label className="text-xs font-medium text-gray-600 mb-0.5">
+                        Memory Limit <span className="text-gray-400 text-[11px]">(KB)</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        className="w-full border border-gray-300 text-sm px-3 py-2 rounded focus:ring-2 focus:ring-sky-300 focus:outline-none bg-gray-50"
+                        value={limits.memory_limit}
+                        onChange={(e) =>
+                          setLimits((prev) => ({
+                            ...prev,
+                            memory_limit: e.target.value,
+                          }))
+                        }
+                        placeholder="ex: 65536"
+                        disabled={limitsLoading || limitsUpdateLoading}
+                      />
+                    </div>
+
+                    {/* Mark */}
+                    <div className="flex flex-col">
+                      <label className="text-xs font-medium text-gray-600 mb-0.5">
+                        Mark
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        className="w-full border border-gray-300 text-sm px-3 py-2 rounded focus:ring-2 focus:ring-sky-300 focus:outline-none bg-gray-50"
+                        value={limits.mark}
+                        onChange={(e) =>
+                          setLimits((prev) => ({
+                            ...prev,
+                            mark: e.target.value,
+                          }))
+                        }
+                        placeholder="ex: 100"
+                        disabled={limitsLoading || limitsUpdateLoading}
+                      />
+                    </div>
+
+                    {/* Update Button */}
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={limitsLoading || limitsUpdateLoading}
+                        className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-5 py-2 rounded transition-all focus:ring-2 focus:ring-offset-2 focus:ring-sky-400 flex items-center justify-center"
+                      >
+                        {limitsUpdateLoading ? (
+                          <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                        ) : (
+                          <span className="mr-1">💾</span>
+                        )}
+                        Update
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+
+
               {addMode === "view" && addResult ? (
                 <div className="bg-white rounded-lg p-4 shadow-xs border border-gray-200 mb-4">
                   <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center">
@@ -446,7 +637,9 @@ const SetQuestion = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-400 italic py-1">No sample test cases yet</div>
+                        <div className="text-xs text-gray-400 italic py-1">
+                          No sample test cases yet
+                        </div>
                       )}
                     </div>
 
@@ -473,7 +666,9 @@ const SetQuestion = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-400 italic py-1">No hidden test cases yet</div>
+                        <div className="text-xs text-gray-400 italic py-1">
+                          No hidden test cases yet
+                        </div>
                       )}
                     </div>
                   </div>
@@ -483,9 +678,7 @@ const SetQuestion = () => {
           </div>
 
           {/* Right Panel - Code Editor */}
-          <div className={`flex-1 transition-all duration-300 ${
-            isCollapsed ? 'lg:ml-0' : ''
-          }`}>
+          <div className={`flex-1 transition-all duration-300 ${isCollapsed ? "lg:ml-0" : ""}`}>
             <div className="flex flex-col h-full">
               <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">Admin Code Editor</h2>
@@ -517,25 +710,25 @@ const SetQuestion = () => {
                 </div>
               </div>
 
-              <div className="flex-grow" style={{ height: 'calc(100vh - 180px)' }}>
+              <div className="flex-grow" style={{ height: "calc(100vh - 180px)" }}>
                 <MonacoEditor
                   height="100%"
                   language={
                     languageId === 54
                       ? "cpp"
                       : languageId === 62
-                      ? "java"
-                      : languageId === 71
-                      ? "python"
-                      : languageId === 63
-                      ? "javascript"
-                      : languageId === 50
-                      ? "c"
-                      : languageId === 74
-                      ? "typescript"
-                      : languageId === 60
-                      ? "go"
-                      : "plaintext"
+                        ? "java"
+                        : languageId === 71
+                          ? "python"
+                          : languageId === 63
+                            ? "javascript"
+                            : languageId === 50
+                              ? "c"
+                              : languageId === 74
+                                ? "typescript"
+                                : languageId === 60
+                                  ? "go"
+                                  : "plaintext"
                   }
                   value={code}
                   theme="vs-dark"
@@ -570,6 +763,7 @@ const SetQuestion = () => {
               </div>
             </div>
           </div>
+          {/* End Right Panel */}
         </div>
       </div>
     </div>

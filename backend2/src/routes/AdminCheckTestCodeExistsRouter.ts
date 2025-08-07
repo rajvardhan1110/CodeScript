@@ -2,15 +2,15 @@ import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import { TestCodeModel } from "../models/TestCodeModel";
 import { ProblemModel } from "../models/ProblemModel";
-import { UserAuthMiddleware } from "../Middleware/UserAuthMiddleware";
+import { AdminAuthMiddleware } from "../Middleware/AdminAuthMiddleware";
 
-const CheckTestCodeExistsRouter = express.Router();
+const AdminCheckTestCodeExistsRouter = express.Router();
 
 interface CustomRequest extends Request {
   userId?: string;
 }
 
-export const CheckTestCodeExistsHandler = async (req: CustomRequest, res: Response) => {
+export const AdminCheckTestCodeExistsHandler = async (req: CustomRequest, res: Response) => {
   try {
     const { testId } = req.body;
 
@@ -53,6 +53,6 @@ export const CheckTestCodeExistsHandler = async (req: CustomRequest, res: Respon
   }
 };
 
-CheckTestCodeExistsRouter.post("/", UserAuthMiddleware, CheckTestCodeExistsHandler);
+AdminCheckTestCodeExistsRouter.post("/", AdminAuthMiddleware, AdminCheckTestCodeExistsHandler);
 
-export default CheckTestCodeExistsRouter;
+export default AdminCheckTestCodeExistsRouter;

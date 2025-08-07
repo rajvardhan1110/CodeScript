@@ -25,8 +25,13 @@ export default function TestInfo() {
     const [countdown, setCountdown] = useState("");
 
     // NEW: small feedback for copy buttons
-    const [copiedWhat, setCopiedWhat] = useState(null); // 'id' | 'link' | null
+    const [copiedWhat, setCopiedWhat] = useState(null); 
 
+    // NEW: coding test info states
+    const [codeTestInfo, setCodeTestInfo] = useState(null); 
+    const [codeTestLoading, setCodeTestLoading] = useState(true);
+
+    // Fetch main test info
     useEffect(() => {
         const fetchTestInfo = async () => {
             try {
@@ -87,6 +92,36 @@ export default function TestInfo() {
 
         fetchTestInfo();
     }, [testId, navigate]);
+
+    // Fetch if coding section exists for this test
+    useEffect(() => {
+        if (!testId) return;
+
+        const fetchCodeTestInfo = async () => {
+            setCodeTestLoading(true);
+            setCodeTestInfo(null); // clear previous
+            try {
+                const token = localStorage.getItem("usertoken");
+                const res = await axios.post(
+                    "http://localhost:5050/checkTestCode",
+                    { testId },
+                    { headers: { token } }
+                );
+                if (res.data.exists) {
+                    setCodeTestInfo({
+                        totalQuestions: res.data.totalQuestions,
+                        totalMarks: res.data.totalMarks
+                    });
+                }
+            } catch (e) {
+                // Fail silently, just don't show the box
+                setCodeTestInfo(null);
+            }
+            setCodeTestLoading(false);
+        };
+
+        fetchCodeTestInfo();
+    }, [testId]);
 
     // Countdown timer
     useEffect(() => {
@@ -227,9 +262,26 @@ export default function TestInfo() {
                     </div>
                 </div>
 
+                {/* Coding Test Info Box - Updated styling */}
+                {codeTestInfo && (
+                    <div className="my-6 p-4 rounded-xl bg-indigo-50 border border-indigo-100 shadow-sm">
+                        <h3 className="text-lg font-semibold text-indigo-800 mb-2">Coding Section Details</h3>
+                        <div className="flex flex-wrap gap-6">
+                            <div className="text-indigo-700">
+                                <span className="font-medium">Questions:</span>{" "}
+                                <span className="font-bold">{codeTestInfo.totalQuestions}</span>
+                            </div>
+                            <div className="text-indigo-700">
+                                <span className="font-medium">Total Marks:</span>{" "}
+                                <span className="font-bold">{codeTestInfo.totalMarks}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-500">Total Marks</p>
+                        <p className="text-sm text-gray-500">Total MCQ Marks</p>
                         <p className="font-medium text-lg">{totalMarks}</p>
                     </div>
 

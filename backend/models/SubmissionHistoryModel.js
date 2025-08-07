@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const submissionSchema = new mongoose.Schema({
   testId: {
@@ -25,10 +25,9 @@ const submissionSchema = new mongoose.Schema({
   },
   marks: {
     type: Number,
-    required: false, 
+    required: false,
   },
 });
-
 
 const SubmissionHistorySchema = new mongoose.Schema({
   userId: {
@@ -40,7 +39,9 @@ const SubmissionHistorySchema = new mongoose.Schema({
   submissions: [submissionSchema],
 });
 
-export const SubmissionHistoryModel = mongoose.model(
+const SubmissionHistoryModel = mongoose.model(
   "SubmissionHistory",
   SubmissionHistorySchema
 );
+
+module.exports = SubmissionHistoryModel;

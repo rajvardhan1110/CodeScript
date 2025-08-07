@@ -14,6 +14,7 @@ export interface IProblem extends Document {
   createdBy: mongoose.Types.ObjectId;
   markdownUrl: string;
   AdminCode: string;
+  mark: number,
   language: number;
   createdAt: Date;
   sampleTestCases: ITestCase[];
@@ -62,6 +63,7 @@ const ProblemSchema = new Schema<IProblem>({
 
   cpu_time_limit: { type: Number, default: 2 },
   memory_limit: { type: Number, default: 128000 },
+  mark : {type : Number,default: 5}
 });
 
 export const ProblemModel = mongoose.model<IProblem>(

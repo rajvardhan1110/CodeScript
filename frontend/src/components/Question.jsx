@@ -57,10 +57,14 @@ export default function Question({ questionId, testId, markAttempted }) {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">
+            <h2
+                className="text-xl font-semibold text-gray-800 mb-6"
+                style={{ whiteSpace: "pre-line" }}
+            >
                 {question.questionText}
             </h2>
-            
+
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {question.options.map((opt) => (
                     <Option

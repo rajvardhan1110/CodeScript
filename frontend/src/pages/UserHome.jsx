@@ -13,6 +13,9 @@ export default function UserHome() {
     const [error, setError] = useState("");
     const [query, setQuery] = useState("");
 
+    // Store coding section info for each testId
+    const [codingInfo, setCodingInfo] = useState({}); // { [testId]: { totalQuestions, totalMarks } }
+
     function logout() {
         if (localStorage.getItem("usertoken")) {
             localStorage.removeItem("usertoken");
@@ -25,7 +28,6 @@ export default function UserHome() {
             localStorage.removeItem("usertoken");
             navigate("/", { replace: true }); 
         };
-
         window.addEventListener("popstate", onPopState);
         return () => window.removeEventListener("popstate", onPopState);
     }, [navigate]);
@@ -39,16 +41,13 @@ export default function UserHome() {
                     logout();
                     return;
                 }
-
                 const response = await axios.get(`${API}/allTests`, {
                     headers: { token }
                 });
-
                 setTests(response.data);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching tests:", error);
-
                 setLoading(false);
                 if (error.response) {
                     if (error.response.status === 401) {
@@ -62,9 +61,37 @@ export default function UserHome() {
                 }
             }
         }
-
         fetchTests();
     }, []);
+
+    // Fetch coding info for each test after tests are loaded
+    useEffect(() => {
+        async function fetchCodingInfoForAll() {
+            if (!tests.length) return;
+            const token = localStorage.getItem("usertoken");
+            const newCodingInfo = {};
+            // Use Promise.all to speed up calls in parallel
+            await Promise.all(tests.map(async (test) => {
+                try {
+                    const res = await axios.post(
+                        "http://localhost:5050/checkTestCode",
+                        { testId: test.testId },
+                        { headers: { token } }
+                    );
+                    if (res.data.exists) {
+                        newCodingInfo[test.testId] = {
+                            totalQuestions: res.data.totalQuestions,
+                            totalMarks: res.data.totalMarks
+                        };
+                    }
+                } catch (e) {
+                    // Silent fail: means no coding section for this test, that's fine
+                }
+            }));
+            setCodingInfo(newCodingInfo);
+        }
+        if (tests.length) fetchCodingInfoForAll();
+    }, [tests]);
 
     const handleCardClick = (testId) => {
         navigate(`/testInfo/${testId}`);
@@ -90,7 +117,6 @@ export default function UserHome() {
                             <span className="text-indigo-600">Code</span>Script
                         </h1>
                     </div>
-
                     {/* Navigation */}
                     <div className="flex items-center space-x-4">
                         <button
@@ -99,7 +125,6 @@ export default function UserHome() {
                         >
                             Log Out
                         </button>
-
                         <button
                             onClick={() => navigate('/userprofile')}
                             className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-md hover:shadow-indigo-200 transition-all"
@@ -122,8 +147,7 @@ export default function UserHome() {
                             Below you'll find upcoming, ongoing, and completed tests.
                         </p>
                     </div>
-
-                    {/* Search bar goes to the right on ≥ sm, below on < sm */}
+                    {/* Search bar */}
                     <div className="w-full sm:w-96">
                         <input
                             type="text"
@@ -161,20 +185,29 @@ export default function UserHome() {
                                 <h3 className="text-xl font-semibold text-gray-800 group-hover:text-indigo-600 mb-3">
                                     {test.title}
                                 </h3>
-
                                 {/* Test ID shown */}
                                 <p className="text-sm text-gray-500 mb-2">
                                     <span className="font-medium">Test ID:</span> {test.testId}
                                 </p>
-
-                                <p className="text-gray-600 mb-4 line-clamp-2">
-                                    {test.description}
-                                </p>
+                                <p className="text-gray-600 mb-4 line-clamp-2">{test.description}</p>
                                 <div className="space-y-2 text-sm text-gray-700">
                                     <div className="flex justify-between">
-                                        <span className="font-medium">Total Marks:</span>
-                                        <span>{test.totalMarks}</span>
+                                        <span className="font-medium">Total MCQ Marks:</span>
+                                        <span className="text-gray-700 font-semibold">{test.totalMarks}</span>
                                     </div>
+                                    {/* Coding section info if available */}
+                                    {codingInfo[test.testId] && (
+                                        <>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Coding Questions:</span>
+                                            <span className="text-gray-700 font-semibold">{codingInfo[test.testId].totalQuestions}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-700">Coding Marks:</span>
+                                            <span className="text-gray-700 font-semibold">{codingInfo[test.testId].totalMarks}</span>
+                                        </div>
+                                        </>
+                                    )}
                                     <div className="flex justify-between">
                                         <span className="font-medium">Date:</span>
                                         <span>{test.date === "upcoming" ? "Upcoming" : new Date(test.date).toLocaleString()}</span>

@@ -8,8 +8,8 @@ import { useParams } from "react-router-dom";
 const UserMarkdown = ({ problemId }) => {
     const [markdownContent, setMarkdownContent] = useState("");
     const token = localStorage.getItem("usertoken");
-    // const testId = useParams();
-    const testId = "688e6eb6daef290f9db94f72"
+    const { testId } = useParams(); 
+   
     useEffect(() => {
         const fetchMarkdown = async () => {
             try {
@@ -75,7 +75,7 @@ const UserMarkdown = ({ problemId }) => {
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <h1 className="text-2xl font-bold text-gray-800 mb-4">Markdown Preview</h1>
+                
                 <div className="prose max-w-none">
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}

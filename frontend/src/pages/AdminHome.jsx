@@ -66,7 +66,7 @@ export default function UserHome() {
     }
 
     function handleCardClick(test_id) {
-        console.log(test_id);
+        // console.log(test_id);
         navigate(`/test/${test_id}`);
     }
 

@@ -43,7 +43,7 @@ function App() {
           <Route path="/userprofile" element={<UserProfile />} />
           <Route path="/adminprofile" element={<AdminProfile/>} />
           <Route path="/test/:testId/updatecodingproblem/:problemId" element={<UpdateProblem/>}/>
-          <Route path="/testing" element={<Testing/>}/>
+          {/* <Route path="/testing" element={<Testing/>}/> */}
 
 
   

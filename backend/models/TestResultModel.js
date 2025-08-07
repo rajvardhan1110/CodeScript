@@ -17,6 +17,9 @@ const TestResultModel = new Schema({
             marks: {
                 type: Number,
                
+            },
+            codingmarks:{
+                type: Number
             }
         }
     ]
