@@ -3,6 +3,9 @@ import axios from "axios";
 import MonacoEditor from "@monaco-editor/react";
 import { useParams, useNavigate } from "react-router-dom";
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const languageOptions = [
   { id: 50, label: "C" },
   { id: 54, label: "C++" },
@@ -79,7 +82,7 @@ const SetQuestion = () => {
     setLimitsLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/get-limits",
+        `${API2}/get-limits`,
         { problemId },
         { headers: { token } }
       );
@@ -113,7 +116,7 @@ const SetQuestion = () => {
     setLimitsUpdateLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/upload-limits",
+        `${API2}/upload-limits`,
         {
           problemId,
           cpu_time_limit: Number(limits.cpu_time_limit),
@@ -142,7 +145,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, boilerplate: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/get-boilerplates",
+        `${API2}/get-boilerplates`,
         { languageId: langId },
         { headers: { token } }
       );
@@ -159,7 +162,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, adminCode: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/getAdminCode",
+        `${API2}/getAdminCode`,
         { problemId },
         {
           headers: { token },
@@ -224,7 +227,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, testCase: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/getAdminTestcase",
+        `${API2}/getAdminTestcase`,
         { problemId, testCaseId },
         { headers: { token } }
       );
@@ -253,7 +256,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, testCase: true }));
     try {
       const res = await axios.post(
-        `http://localhost:5050/upload${addMode === "sample" ? "Sample" : "Hidden"}Test`,
+        `${API2}/upload${addMode === "sample" ? "Sample" : "Hidden"}Test`,
         { problemId, testCase: { input: testInput } },
         { headers: { token } }
       );
@@ -286,7 +289,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, deleteCase: true }));
     try {
       const res = await axios.delete(
-        `http://localhost:5050/delete${addResult.type === "sample" ? "Sample" : "Hidden"}Test`,
+        `${API2}/delete${addResult.type === "sample" ? "Sample" : "Hidden"}Test`,
         {
           headers: { token },
           data: {
@@ -313,7 +316,7 @@ const SetQuestion = () => {
     setLoadingStates((prev) => ({ ...prev, saveCode: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/uploadAdminCode",
+        `${API2}/uploadAdminCode`,
         {
           code,
           language_id: languageId,

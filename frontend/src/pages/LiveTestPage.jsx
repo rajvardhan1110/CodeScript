@@ -9,6 +9,7 @@ import UserCodingQuestions from "../components/UserCodingQuestions"; // Adjust i
 
 import config from "../../apiconfig";
 const API = config.BASE_URL;
+const API2 = config.JudgeBackend_url;
 
 export default function LiveTestPage() {
     const { testId } = useParams();
@@ -69,7 +70,7 @@ export default function LiveTestPage() {
             const token = localStorage.getItem("usertoken");
             try {
                 const res = await axios.post(
-                    "http://localhost:5050/checkTestCode",
+                    `${API2}/checkTestCode`,
                     { testId },
                     { headers: { token } }
                 );

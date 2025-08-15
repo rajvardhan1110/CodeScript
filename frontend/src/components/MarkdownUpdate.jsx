@@ -5,6 +5,9 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import axios from "axios";
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const MarkdownUpdate = ({ testId, problemId }) => {
   const [markdownContent, setMarkdownContent] = useState("");
   const [title, setTitle] = useState("");
@@ -28,7 +31,7 @@ const MarkdownUpdate = ({ testId, problemId }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/adminMarkdown",
+        `${API2}/adminMarkdown`,
         { testId, problemId },
         { headers: { token } }
       );
@@ -61,7 +64,7 @@ const MarkdownUpdate = ({ testId, problemId }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/updateAdminMarkdown",
+        `${API2}/updateAdminMarkdown`,
         { testId, problemId, markdownContent },
         { headers: { token } }
       );

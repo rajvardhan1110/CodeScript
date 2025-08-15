@@ -5,6 +5,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const CodingQuestions = ({ testId }) => {
   const [codingQuestions, setCodingQuestions] = useState([]);
   const [showEditor, setShowEditor] = useState(false);
@@ -31,7 +34,7 @@ const CodingQuestions = ({ testId }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/admin/test-problems",
+        `${API2}/admin/test-problems`,
         { testId },
         { headers: { token } }
       );
@@ -56,7 +59,7 @@ const CodingQuestions = ({ testId }) => {
   const fetchDefaultMarkdown = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5050/getDefaultMarkdown",
+        `${API2}/getDefaultMarkdown`,
         { headers: { token } }
       );
 
@@ -88,7 +91,7 @@ const CodingQuestions = ({ testId }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:5050/createTestCode",
+        `${API2}/createTestCode`,
         {
           testId,
           title,

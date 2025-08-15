@@ -5,6 +5,7 @@ import axios from "axios";
 
 import config from "../../apiconfig";
 const API = config.BASE_URL;
+const API2 = config.JudgeBackend_url;
 
 export default function UserHome() {
     const navigate = useNavigate();
@@ -74,7 +75,7 @@ export default function UserHome() {
             await Promise.all(tests.map(async (test) => {
                 try {
                     const res = await axios.post(
-                        "http://localhost:5050/checkTestCode",
+                        `${API2}/checkTestCode`,
                         { testId: test.testId },
                         { headers: { token } }
                     );

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import config from "../../apiconfig";
 const API = config.BASE_URL;
+const API2 = config.JudgeBackend_url;
 
 // import your UserCodingQuestions (no changes in its file)
 import UserCodingQuestions from "../components/UserCodingQuestions";
@@ -58,7 +59,7 @@ export default function TestSummaryPage() {
       if (!token || !testId) return;
       try {
         const res = await axios.post(
-          "http://localhost:5050/checkTestCode",
+          `${API2}/checkTestCode`,
           { testId },
           { headers: { token } }
         );

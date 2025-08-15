@@ -16,29 +16,49 @@ export default function AdminSignup() {
     const navigate = useNavigate();
 
     async function signupadmin() {
-        const data = {
-            name: name,
-            email: email,
-            password: password
+    const data = {
+        name: name,
+        email: email,
+        password: password
+    };
+
+    try {
+        const response = await axios.post(`${API}/admin/signup`, data);
+
+        if (response.data.msg === "invalid format") {
+            setErrorMsg("Please enter valid information");
+            setSuccessMsg('');
+        } else if (response.data.msg === "User already exists") {
+            setErrorMsg("An account with this email already exists");
+            setSuccessMsg('');
+        } else if (response.data.msg === "successfully admin signed up") {
+            setSuccessMsg("Educator account created successfully");
+            setErrorMsg('');
+            setTimeout(() => {
+                navigate("/admin/home");
+            }, 1000);
         }
+    } catch (e) {
+        console.error("Error:", e);
 
-        try {
-            const response = await axios.post(`${API}/admin/signup`, data);
-            if (response.data.msg === "invalid format") {
-                setErrorMsg("Please enter valid information");
-            } else if (response.data.msg === "User already exists") {
-                setErrorMsg("An account with this email already exists");
-            } else if (response.data.msg === "successfully admin signed up") {
-                setSuccessMsg("Educator account created successfully");
-                setTimeout(() => {
-                    navigate("/admin/home");
-                }, 1000);
-
-            }
-        } catch (e) {
-            console.error("Error: ", e);
+        // ✅ Server responded with an error (like 400 or 500)
+        if (e.response && e.response.data && e.response.data.msg) {
+            setErrorMsg(e.response.data.msg);
+            setSuccessMsg('');
+        } 
+        // ✅ Server didn't respond (network issue, timeout)
+        else if (e.request) {
+            setErrorMsg("Server error, Please try again later.");
+            setSuccessMsg('');
+        } 
+        // ✅ Unexpected error (maybe in frontend code)
+        else {
+            setErrorMsg("Something went wrong. Please try again.");
+            setSuccessMsg('');
         }
     }
+}
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">

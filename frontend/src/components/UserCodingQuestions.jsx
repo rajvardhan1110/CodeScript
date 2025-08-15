@@ -6,6 +6,9 @@ import CodeEditor from "./CodeEditor";
 import Split from 'react-split'
 import { useParams } from "react-router-dom";
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const UserCodingQuestions = () => {
     const { testId } = useParams();
 
@@ -23,7 +26,7 @@ const UserCodingQuestions = () => {
             setLoading(true);
             try {
                 const res = await axios.post(
-                    "http://localhost:5050/user/test-problems",
+                    `${API2}/user/test-problems`,
                     { testId },
                     { headers: { token } }
                 );

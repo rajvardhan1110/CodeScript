@@ -11,6 +11,7 @@ import { toggleTestPhase } from "../api/finaliseTest";
 
 import config from "../../apiconfig";
 const API = config.BASE_URL;
+const API2 = config.JudgeBackend_url;
 
 export default function TestDetails() {
     const { id } = useParams();
@@ -48,7 +49,7 @@ export default function TestDetails() {
             try {
                 const token = localStorage.getItem("token");
                 const res = await axios.post(
-                    "http://localhost:5050/admin-checkTestCode",
+                    `${API2}/admin-checkTestCode`,
                     { testId: id },
                     { headers: { token } }
                 );

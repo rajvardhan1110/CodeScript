@@ -4,6 +4,9 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import confetti from 'canvas-confetti';
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const languageOptions = [
   { id: 50, label: "C" },
   { id: 54, label: "C++" },
@@ -68,7 +71,7 @@ const CodeEditor = ({ problemId }) => {
     setLoadingStates((prev) => ({ ...prev, userCode: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/getUserCode",
+        `${API2}/getUserCode`,
         { testId, problemId },
         { headers: { token } }
       );
@@ -98,7 +101,7 @@ const CodeEditor = ({ problemId }) => {
     setLoadingStates((prev) => ({ ...prev, boilerplate: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/get-boilerplates",
+        `${API2}/get-boilerplates`,
         { languageId: langId },
         { headers: { token } }
       );
@@ -125,7 +128,7 @@ const CodeEditor = ({ problemId }) => {
   const fetchSampleTestCases = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5050/getSampleTestCase",
+        `${API2}/getSampleTestCase`,
         { problemId },
         { headers: { token } }
       );
@@ -156,7 +159,7 @@ const CodeEditor = ({ problemId }) => {
     setLoadingStates((prev) => ({ ...prev, saveCode: true }));
     try {
       await axios.post(
-        "http://localhost:5050/uploadUserCode",
+        `${API2}/uploadUserCode`,
         {
           code: currentCode,
           language_id: languageId,
@@ -208,7 +211,7 @@ const CodeEditor = ({ problemId }) => {
     setLoadingStates((prev) => ({ ...prev, run: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/runUserTestCase",
+        `${API2}/runUserTestCase`,
         { code, language_id: languageId, problemId },
         { headers: { token } }
       );
@@ -236,7 +239,7 @@ const CodeEditor = ({ problemId }) => {
     setLoadingStates(prev => ({ ...prev, submit: true }));
     try {
       const res = await axios.post(
-        "http://localhost:5050/submitCodeUser",
+        `${API2}/submitCodeUser`,
         { code, language_id: languageId, testId, problemId },
         { headers: { token } }
       );
@@ -310,7 +313,7 @@ const CodeEditor = ({ problemId }) => {
     setOneSubmissionError('');
     try {
       const res = await axios.post(
-        'http://localhost:5050/history/list',
+        `${API2}/history/list`,
         { testId, problemId },
         { headers: { token } }
       );
@@ -328,7 +331,7 @@ const CodeEditor = ({ problemId }) => {
     setOneSubmissionError('');
     try {
       const res = await axios.post(
-        "http://localhost:5050/history/one",
+        `${API2}/history/one`,
         { testId, problemId, submissionId },
         { headers: { token } }
       );

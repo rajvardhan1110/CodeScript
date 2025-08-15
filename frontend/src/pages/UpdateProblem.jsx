@@ -4,7 +4,8 @@ import axios from "axios";
 import MarkdownUpdate from "../components/MarkdownUpdate";
 import SetQuestion from "../components/SetQuestion";
 
-
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
 
 const UpdateProblem = () => {
     const { testId, problemId } = useParams();
@@ -29,7 +30,7 @@ const UpdateProblem = () => {
         try {
 
             await axios.post(
-                "http://localhost:5050/admin/delete-problem",
+                `${API2}/admin/delete-problem`,
                 { problemId },
                 {
                     headers: {

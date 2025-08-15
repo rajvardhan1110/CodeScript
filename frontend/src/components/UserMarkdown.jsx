@@ -5,6 +5,9 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { useParams } from "react-router-dom";
 
+import config from "../../apiconfig";
+const API2 = config.JudgeBackend_url;
+
 const UserMarkdown = ({ problemId }) => {
     const [markdownContent, setMarkdownContent] = useState("");
     const token = localStorage.getItem("usertoken");
@@ -14,7 +17,7 @@ const UserMarkdown = ({ problemId }) => {
         const fetchMarkdown = async () => {
             try {
                 const res = await axios.post(
-                    "http://localhost:5050/userMarkdown",
+                    `${API2}/userMarkdown`,
                     {
                         testId: testId,
                         problemId: problemId

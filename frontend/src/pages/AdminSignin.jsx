@@ -15,32 +15,51 @@ export default function AdminSignin() {
     const navigate = useNavigate();
 
     async function signinadmin() {
-        const data = {
-            email: email,
-            password: password
+    const data = {
+        email: email,
+        password: password
+    };
+
+    try {
+        const response = await axios.post(`${API}/admin/signin`, data);
+
+        if (response.data.msg === "invalid email") {
+            setErrorMsg("Invalid email");
+            setSuccessMsg('');
+        } else if (response.data.msg === "incorrect password") {
+            setErrorMsg("Incorrect password");
+            setSuccessMsg('');
+        } else {
+            const token = response.data.token;
+            localStorage.setItem("token", token);
+
+            setSuccessMsg("Account Login successfully! Redirecting...");
+            setErrorMsg('');
+
+            setTimeout(() => {
+                navigate('/admin/home', { replace: true });
+            }, 1000);
         }
+    } catch (e) {
+        console.error("Error: ", e);
 
-        try {
-            const response = await axios.post(`${API}/admin/signin`, data);
-            if (response.data.msg === "invalid email") {
-                setErrorMsg("Invalid email");
-            } else if (response.data.msg === "incorrect password") {
-                setErrorMsg("Incorrect password");
-            } else {
-                const token = response.data.token;
-                localStorage.setItem("token", token);
-
-                setSuccessMsg("Account Login successfully! Redirecting...");
-
-                setTimeout(() => {
-                    navigate('/admin/home', { replace: true });
-                }, 1000);
-
-            }
-        } catch (e) {
-            console.error("Error: ", e);
+        
+        if (e.response && e.response.data && e.response.data.msg) {
+            setErrorMsg(e.response.data.msg);
+            setSuccessMsg('');
+        } 
+        
+        else if (e.request) {
+            setErrorMsg("Server error, Please try again later.");
+            setSuccessMsg('');
+        } 
+        
+        else {
+            setErrorMsg("Something went wrong. Please try again.");
+            setSuccessMsg('');
         }
     }
+}
 
     function forUser() {
         navigate("/user/signin", { replace: true });

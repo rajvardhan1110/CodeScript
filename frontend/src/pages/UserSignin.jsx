@@ -23,20 +23,25 @@ export default function UserSignin() {
             if (token) {
                 localStorage.setItem("usertoken", token);
                 setSuccessMsg("Account Login successfully! Redirecting...");
+                setErrorMsg('');
                 setTimeout(() => {
                     navigate('/user/home', { replace: true });
                 }, 1000);
 
             } else if (msg) {
                 setErrorMsg(msg);
+                setSuccessMsg('');
             } else {
                 setErrorMsg("Unexpected error. Please try again.");
+                setSuccessMsg('');
             }
         } catch (e) {
             if (e.response && e.response.data && e.response.data.msg) {
                 setErrorMsg(e.response.data.msg);
+                setSuccessMsg('');
             } else {
                 setErrorMsg("Server error. Please try again later.");
+                setSuccessMsg('');
             }
         }
     }
