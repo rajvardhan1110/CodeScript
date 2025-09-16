@@ -43,7 +43,7 @@ const UploadHiddenTestCodeHandler = (req, res) => __awaiter(void 0, void 0, void
         const language_id = problem.language;
         const cpu_time_limit = problem.cpu_time_limit || 2;
         const memory_limit = problem.memory_limit || 128000;
-        const response = yield axios_1.default.post("http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true", {
+        const response = yield axios_1.default.post("http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true", {
             source_code: encodeBase64(codeData),
             stdin: encodeBase64(testCase.input),
             language_id,

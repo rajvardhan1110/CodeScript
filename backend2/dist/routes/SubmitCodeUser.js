@@ -46,7 +46,7 @@ const SubmitCodeUserHandler = (req, res) => __awaiter(void 0, void 0, void 0, fu
         const testIdObjectId = new mongoose_1.default.Types.ObjectId(testId);
         const { sampleTestCases, hiddenTestCases, cpu_time_limit, memory_limit } = problem;
         const runTestCase = (input, expectedOutput) => __awaiter(void 0, void 0, void 0, function* () {
-            const response = yield axios_1.default.post("http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true", {
+            const response = yield axios_1.default.post("http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true", {
                 source_code: encodeBase64(code),
                 stdin: encodeBase64(input),
                 expected_output: encodeBase64(expectedOutput),

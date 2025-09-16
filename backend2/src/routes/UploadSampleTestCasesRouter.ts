@@ -69,7 +69,7 @@ export const UploadSampleTestCodeHandler = async (
         console.log("💾 memory_limit:", memory_limit);
 
         const response = await axios.post<Judge0Response>(
-            "http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true",
+            "http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true",
             {
                 source_code: encodeBase64(codeData),
                 stdin: encodeBase64(testCase.input),

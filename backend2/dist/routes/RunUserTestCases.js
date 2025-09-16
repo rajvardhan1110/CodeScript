@@ -63,7 +63,7 @@ const RunUserTestCasesHandler = (req, res) => __awaiter(void 0, void 0, void 0, 
                 inputPreview: input.slice(0, 30),
                 expectedOutputPreview: expectedOutput.slice(0, 30),
             });
-            const response = yield axios_1.default.post("http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true", {
+            const response = yield axios_1.default.post("http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true", {
                 source_code: encodeBase64(code),
                 stdin: encodeBase64(input),
                 expected_output: encodeBase64(expectedOutput),

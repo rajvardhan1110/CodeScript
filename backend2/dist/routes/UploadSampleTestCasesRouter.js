@@ -54,7 +54,7 @@ const UploadSampleTestCodeHandler = (req, res) => __awaiter(void 0, void 0, void
         console.log("🧠 language_id:", language_id);
         console.log("⏱ cpu_time_limit:", cpu_time_limit);
         console.log("💾 memory_limit:", memory_limit);
-        const response = yield axios_1.default.post("http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true", {
+        const response = yield axios_1.default.post("http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true", {
             source_code: encodeBase64(codeData),
             stdin: encodeBase64(testCase.input),
             language_id,

@@ -79,7 +79,7 @@ export const RunUserTestCasesHandler = async (req: CustomRequest, res: Response)
       });
 
       const response = await axios.post<Judge0Response>(
-        "http://judge.dhanrajj.me:2358/submissions?base64_encoded=true&wait=true",
+        "http://judgezeroraj.patilraj.me:2358/submissions?base64_encoded=true&wait=true",
         {
           source_code: encodeBase64(code),
           stdin: encodeBase64(input),
